@@ -6,6 +6,7 @@ set -e
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Проверка root
@@ -14,17 +15,41 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Проверка аргумента
+# Получение IP сервера
+SERVER_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || hostname -I | awk '{print $1}')
+
+# Получение домена
 if [ -z "$1" ]; then
-    echo -e "${RED}Использование: $0 <домен>${NC}"
-    echo "Пример: $0 makrelbka.online"
+    echo -e "${BLUE}========================================${NC}"
+    echo -e "${BLUE}Установка trojan-go с WebSocket${NC}"
+    echo -e "${BLUE}========================================${NC}"
+    echo ""
+    echo -e "${YELLOW}IP вашего сервера: ${SERVER_IP}${NC}"
+    echo ""
+    echo -e "${YELLOW}Важно: Домен должен указывать на этот IP!${NC}"
+    echo ""
+    read -p "Введите домен (например, makrelbka.online): " DOMAIN
+    echo ""
+else
+    DOMAIN=$1
+fi
+
+if [ -z "$DOMAIN" ]; then
+    echo -e "${RED}Домен не может быть пустым!${NC}"
     exit 1
 fi
 
-DOMAIN=$1
 EMAIL="admin@${DOMAIN}"
 
 echo -e "${GREEN}Начинаю установку trojan-go для домена: ${DOMAIN}${NC}"
+echo -e "${YELLOW}Убедитесь, что DNS записи для ${DOMAIN} указывают на IP: ${SERVER_IP}${NC}"
+echo ""
+read -p "Продолжить установку? (y/n): " -n 1 -r
+echo ""
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "${RED}Установка отменена${NC}"
+    exit 1
+fi
 
 # Обновление системы
 echo -e "${YELLOW}Обновление системы...${NC}"
@@ -353,6 +378,7 @@ echo -e "${GREEN}Установка завершена!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 echo "Домен: ${DOMAIN}"
+echo "IP сервера: ${SERVER_IP}"
 echo "Пароль первого клиента: ${PASSWORD}"
 echo ""
 echo "Ссылка для подключения:"
@@ -363,5 +389,5 @@ echo "  trojan-client add <пароль>     - Добавить клиента"
 echo "  trojan-client remove <пароль>  - Удалить клиента"
 echo "  trojan-client list             - Список всех клиентов"
 echo ""
-echo -e "${YELLOW}Не забудьте настроить DNS записи для ${DOMAIN}!${NC}"
+echo -e "${YELLOW}Важно: Убедитесь, что DNS записи для ${DOMAIN} указывают на IP: ${SERVER_IP}${NC}"
 echo ""
