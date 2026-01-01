@@ -9,6 +9,34 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# Функция удаления trojan-go
+uninstall_trojan() {
+    echo -e "${YELLOW}Удаление trojan-go...${NC}"
+    
+    # Остановка и удаление сервиса
+    systemctl stop trojan-go 2>/dev/null || true
+    systemctl disable trojan-go 2>/dev/null || true
+    rm -f /etc/systemd/system/trojan-go.service
+    systemctl daemon-reload
+    
+    # Удаление файлов
+    rm -f /usr/local/bin/trojan-go
+    rm -rf /usr/local/etc/trojan-go
+    rm -f /usr/local/bin/trojan-client
+    
+    echo -e "${GREEN}✓ trojan-go полностью удален${NC}"
+    exit 0
+}
+
+# Проверка на команду удаления
+if [ "$1" = "uninstall" ] || [ "$1" = "remove" ]; then
+    if [ "$EUID" -ne 0 ]; then 
+        echo -e "${RED}Запустите скрипт от root${NC}"
+        exit 1
+    fi
+    uninstall_trojan
+fi
+
 # Проверка root
 if [ "$EUID" -ne 0 ]; then 
     echo -e "${RED}Запустите скрипт от root${NC}"
@@ -40,10 +68,42 @@ if [ -z "$DOMAIN" ]; then
     exit 1
 fi
 
+# Проверка DNS
+echo -e "${YELLOW}Проверка DNS записей для ${DOMAIN}...${NC}"
+DOMAIN_IP=$(dig +short ${DOMAIN} @8.8.8.8 2>/dev/null | tail -n1 || nslookup ${DOMAIN} 2>/dev/null | grep -A1 "Name:" | grep "Address:" | awk '{print $2}' || echo "")
+
+if [ -z "$DOMAIN_IP" ]; then
+    echo -e "${RED}Ошибка: Не удалось получить IP адрес для домена ${DOMAIN}${NC}"
+    echo -e "${YELLOW}Убедитесь, что домен существует и DNS записи настроены${NC}"
+    exit 1
+fi
+
+echo -e "${BLUE}IP домена ${DOMAIN}: ${DOMAIN_IP}${NC}"
+echo -e "${BLUE}IP сервера: ${SERVER_IP}${NC}"
+echo ""
+
+if [ "$DOMAIN_IP" != "$SERVER_IP" ]; then
+    echo -e "${RED}⚠ ВНИМАНИЕ: IP домена не совпадает с IP сервера!${NC}"
+    echo -e "${YELLOW}Домен ${DOMAIN} указывает на: ${DOMAIN_IP}${NC}"
+    echo -e "${YELLOW}Ваш сервер имеет IP: ${SERVER_IP}${NC}"
+    echo ""
+    echo -e "${YELLOW}Установка может не работать, если DNS не настроен правильно.${NC}"
+    echo ""
+    read -p "Продолжить установку несмотря на это? (y/n): " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${RED}Установка отменена${NC}"
+        echo -e "${YELLOW}Настройте DNS записи для ${DOMAIN} на IP ${SERVER_IP} и попробуйте снова${NC}"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}✓ DNS записи настроены правильно!${NC}"
+    echo ""
+fi
+
 EMAIL="admin@${DOMAIN}"
 
 echo -e "${GREEN}Начинаю установку trojan-go для домена: ${DOMAIN}${NC}"
-echo -e "${YELLOW}Убедитесь, что DNS записи для ${DOMAIN} указывают на IP: ${SERVER_IP}${NC}"
 echo ""
 read -p "Продолжить установку? (y/n): " -n 1 -r
 echo ""
@@ -52,15 +112,14 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
-# Обновление системы
-echo -e "${YELLOW}Обновление системы...${NC}"
+# Обновление только списков пакетов
+echo -e "${YELLOW}Обновление списков пакетов...${NC}"
 export DEBIAN_FRONTEND=noninteractive
 apt update
-apt upgrade -y
 
-# Установка зависимостей
+# Установка только нужных зависимостей
 echo -e "${YELLOW}Установка зависимостей...${NC}"
-apt install -y curl wget unzip python3 python3-pip nginx certbot python3-certbot-nginx ufw
+apt install -y curl wget unzip python3 python3-pip nginx certbot python3-certbot-nginx ufw dnsutils
 
 # Установка trojan-go
 echo -e "${YELLOW}Установка trojan-go...${NC}"
@@ -387,6 +446,9 @@ echo "Управление клиентами:"
 echo "  trojan-client add <пароль>     - Добавить клиента"
 echo "  trojan-client remove <пароль>  - Удалить клиента"
 echo "  trojan-client list             - Список всех клиентов"
+echo ""
+echo "Удаление trojan-go:"
+echo "  bash <(curl -fsSL https://raw.githubusercontent.com/makrelbka/trojan-ws-tunnel-quick-install/main/install.sh) uninstall"
 echo ""
 echo -e "${YELLOW}Важно: Убедитесь, что DNS записи для ${DOMAIN} указывают на IP: ${SERVER_IP}${NC}"
 echo ""
