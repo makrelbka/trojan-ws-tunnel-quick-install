@@ -1,5 +1,3 @@
-## Исправленный скрипт с правильным парсингом домена
-
 #!/bin/bash
 
 set -e
@@ -126,10 +124,10 @@ fi
 echo -e "${YELLOW}Установка trojan-go...${NC}"
 cd /tmp
 wget -q https://github.com/p4gefau1t/trojan-go/releases/latest/download/trojan-go-linux-amd64.zip
-unzip -o -q trojan-go-linux-amd64.zip trojan-go
+unzip -o -q trojan-go-linux-amd64.zip
 mv trojan-go /usr/local/bin/
 chmod +x /usr/local/bin/trojan-go
-rm -f trojan-go-linux-amd64.zip
+rm trojan-go-linux-amd64.zip
 
 # Создание директорий
 mkdir -p /usr/local/etc/trojan-go
