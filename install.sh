@@ -19,7 +19,10 @@ fi
 SERVER_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || hostname -I | awk '{print $1}')
 
 # Получение домена
-if [ -z "$1" ]; then
+DOMAIN=""
+if [ -n "$1" ]; then
+    DOMAIN=$1
+else
     echo -e "${BLUE}========================================${NC}"
     echo -e "${BLUE}Установка trojan-go с WebSocket${NC}"
     echo -e "${BLUE}========================================${NC}"
@@ -30,8 +33,6 @@ if [ -z "$1" ]; then
     echo ""
     read -p "Введите домен (например, makrelbka.online): " DOMAIN
     echo ""
-else
-    DOMAIN=$1
 fi
 
 if [ -z "$DOMAIN" ]; then
@@ -230,32 +231,32 @@ ufw allow 443/tcp
 
 # Создание скрипта для управления клиентами
 echo -e "${YELLOW}Создание скрипта для управления клиентами...${NC}"
-cat > /usr/local/bin/trojan-client << 'SCRIPT_EOF'
+cat > /usr/local/bin/trojan-client << SCRIPT_EOF
 #!/bin/bash
 
 CONFIG_FILE="/usr/local/etc/trojan-go/config.json"
-DOMAIN="DOMAIN_PLACEHOLDER"
+DOMAIN="${DOMAIN}"
 PORT=443
 
 # Функция добавления клиента
 add_client() {
-    if [ -z "$1" ]; then
-        echo "Использование: $0 add <пароль>"
+    if [ -z "\$1" ]; then
+        echo "Использование: \$0 add <пароль>"
         exit 1
     fi
     
-    password=$1
-    cp "$CONFIG_FILE" "${CONFIG_FILE}.bak.$(date +%s)"
+    password=\$1
+    cp "\$CONFIG_FILE" "\${CONFIG_FILE}.bak.\$(date +%s)"
     
-    result=$(python3 << EOF
+    result=\$(python3 << PYEOF
 import json
 import sys
 try:
-    with open('$CONFIG_FILE', 'r') as f:
+    with open('\$CONFIG_FILE', 'r') as f:
         config = json.load(f)
-    if '$password' not in config.get('password', []):
-        config.setdefault('password', []).append('$password')
-        with open('$CONFIG_FILE', 'w') as f:
+    if '\$password' not in config.get('password', []):
+        config.setdefault('password', []).append('\$password')
+        with open('\$CONFIG_FILE', 'w') as f:
             json.dump(config, f, indent=4)
         print("OK")
     else:
@@ -264,13 +265,13 @@ try:
 except Exception as e:
     print(f"ERROR: {e}")
     sys.exit(1)
-EOF
+PYEOF
 )
     
-    if [ "$result" = "OK" ]; then
+    if [ "\$result" = "OK" ]; then
         systemctl restart trojan-go
         echo "✓ Клиент добавлен"
-        echo "trojan://${password}@${DOMAIN}:${PORT}?allowInsecure=1&sni=${DOMAIN}&type=ws&path=/ws&host=${DOMAIN}#${DOMAIN}"
+        echo "trojan://\${password}@\${DOMAIN}:\${PORT}?allowInsecure=1&sni=\${DOMAIN}&type=ws&path=/ws&host=\${DOMAIN}#\${DOMAIN}"
     else
         echo "Ошибка: пароль уже существует"
         exit 1
@@ -279,23 +280,23 @@ EOF
 
 # Функция удаления клиента
 remove_client() {
-    if [ -z "$1" ]; then
-        echo "Использование: $0 remove <пароль>"
+    if [ -z "\$1" ]; then
+        echo "Использование: \$0 remove <пароль>"
         exit 1
     fi
     
-    password=$1
-    cp "$CONFIG_FILE" "${CONFIG_FILE}.bak.$(date +%s)"
+    password=\$1
+    cp "\$CONFIG_FILE" "\${CONFIG_FILE}.bak.\$(date +%s)"
     
-    result=$(python3 << EOF
+    result=\$(python3 << PYEOF
 import json
 import sys
 try:
-    with open('$CONFIG_FILE', 'r') as f:
+    with open('\$CONFIG_FILE', 'r') as f:
         config = json.load(f)
-    if 'password' in config and '$password' in config['password']:
-        config['password'].remove('$password')
-        with open('$CONFIG_FILE', 'w') as f:
+    if 'password' in config and '\$password' in config['password']:
+        config['password'].remove('\$password')
+        with open('\$CONFIG_FILE', 'w') as f:
             json.dump(config, f, indent=4)
         print("OK")
     else:
@@ -304,10 +305,10 @@ try:
 except Exception as e:
     print(f"ERROR: {e}")
     sys.exit(1)
-EOF
+PYEOF
 )
     
-    if [ "$result" = "OK" ]; then
+    if [ "\$result" = "OK" ]; then
         systemctl restart trojan-go
         echo "✓ Клиент удален"
     else
@@ -318,40 +319,40 @@ EOF
 
 # Функция списка клиентов
 list_clients() {
-    python3 << EOF
+    python3 << PYEOF
 import json
 try:
-    with open('$CONFIG_FILE', 'r') as f:
+    with open('\$CONFIG_FILE', 'r') as f:
         config = json.load(f)
     passwords = config.get('password', [])
     if passwords:
-        domain = "$DOMAIN"
-        port = $PORT
-        print("Список клиентов:\n")
+        domain = "\${DOMAIN}"
+        port = \${PORT}
+        print("Список клиентов:\\n")
         for i, pwd in enumerate(passwords, 1):
             link = f"trojan://{pwd}@{domain}:{port}?allowInsecure=1&sni={domain}&type=ws&path=/ws&host={domain}#{domain}"
             print(f"{i}. Пароль: {pwd}")
-            print(f"   Ссылка: {link}\n")
+            print(f"   Ссылка: {link}\\n")
     else:
         print("Клиенты не найдены")
 except Exception as e:
     print(f"Ошибка: {e}")
-EOF
+PYEOF
 }
 
 # Главное меню
-case "$1" in
+case "\$1" in
     add)
-        add_client "$2"
+        add_client "\$2"
         ;;
     remove|del)
-        remove_client "$2"
+        remove_client "\$2"
         ;;
     list|ls)
         list_clients
         ;;
     *)
-        echo "Использование: $0 {add|remove|list} [пароль]"
+        echo "Использование: \$0 {add|remove|list} [пароль]"
         echo ""
         echo "Команды:"
         echo "  add <пароль>     - Добавить клиента"
@@ -359,16 +360,14 @@ case "$1" in
         echo "  list             - Список всех клиентов с ссылками"
         echo ""
         echo "Примеры:"
-        echo "  $0 add mypassword123"
-        echo "  $0 remove mypassword123"
-        echo "  $0 list"
+        echo "  \$0 add mypassword123"
+        echo "  \$0 remove mypassword123"
+        echo "  \$0 list"
         exit 1
         ;;
 esac
 SCRIPT_EOF
 
-# Замена домена в скрипте
-sed -i "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" /usr/local/bin/trojan-client
 chmod +x /usr/local/bin/trojan-client
 
 # Вывод результата
