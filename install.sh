@@ -126,7 +126,7 @@ fi
 echo -e "${YELLOW}Установка trojan-go...${NC}"
 cd /tmp
 wget -q https://github.com/p4gefau1t/trojan-go/releases/latest/download/trojan-go-linux-amd64.zip
-unzip -j -q trojan-go-linux-amd64.zip trojan-go
+unzip -o -q trojan-go-linux-amd64.zip trojan-go
 mv trojan-go /usr/local/bin/
 chmod +x /usr/local/bin/trojan-go
 rm -f trojan-go-linux-amd64.zip
