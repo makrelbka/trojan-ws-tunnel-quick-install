@@ -1,3 +1,5 @@
+## Исправленный скрипт с правильным парсингом домена
+
 #!/bin/bash
 
 set -e
@@ -44,10 +46,10 @@ fi
 # Получение IP сервера
 SERVER_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || hostname -I | awk '{print $1}')
 
-# Получение домена
+# Получение домена (берем первый аргумент, убираем пробелы)
 DOMAIN=""
 if [ -n "$1" ]; then
-    DOMAIN=$1
+    DOMAIN=$(echo "$1" | xargs)  # Убирает пробелы в начале и конце
 else
     echo -e "${BLUE}========================================${NC}"
     echo -e "${BLUE}Установка trojan-go с WebSocket${NC}"
@@ -58,6 +60,7 @@ else
     echo -e "${YELLOW}Важно: Домен должен указывать на этот IP!${NC}"
     echo ""
     read -p "Введите домен (например, makrelbka.online): " DOMAIN
+    DOMAIN=$(echo "$DOMAIN" | xargs)  # Убирает пробелы
     echo ""
 fi
 
@@ -123,10 +126,10 @@ fi
 echo -e "${YELLOW}Установка trojan-go...${NC}"
 cd /tmp
 wget -q https://github.com/p4gefau1t/trojan-go/releases/latest/download/trojan-go-linux-amd64.zip
-unzip -o -q trojan-go-linux-amd64.zip
+unzip -j -q trojan-go-linux-amd64.zip trojan-go
 mv trojan-go /usr/local/bin/
 chmod +x /usr/local/bin/trojan-go
-rm trojan-go-linux-amd64.zip
+rm -f trojan-go-linux-amd64.zip
 
 # Создание директорий
 mkdir -p /usr/local/etc/trojan-go
