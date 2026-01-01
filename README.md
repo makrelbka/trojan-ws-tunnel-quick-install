@@ -3,6 +3,53 @@
 Быстрая установка trojan-go с WebSocket туннелированием через Cloudflare для обхода блокировок мобильных операторов.
 
 ## Установка
+
+### Интерактивная установка
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/makrelbka/trojan-ws-tunnel-quick-install/main/install.sh)
 ```
-curl -fsSL https://raw.githubusercontent.com/makrelbka/trojan-ws-tunnel-quick-install/main/install.sh | bash -s makrelbka.online
+
+### С указанием домена
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/makrelbka/trojan-ws-tunnel-quick-install/main/install.sh) makrelbka.online
 ```
+
+## Требования
+
+- Ubuntu/Debian сервер
+- Домен с DNS записями, указывающими на IP сервера
+- Root доступ
+
+## Использование
+
+После установки используйте скрипт trojan-client для управления клиентами:
+
+```bash
+# Добавить клиента
+trojan-client add mypassword123
+
+# Удалить клиента
+trojan-client remove mypassword123
+
+# Список всех клиентов с ссылками
+trojan-client list
+```
+
+## Удаление
+
+Для полного удаления trojan-go:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/makrelbka/trojan-ws-tunnel-quick-install/main/install.sh) uninstall
+```
+
+## Особенности
+
+- Автоматическая установка trojan-go
+- Настройка nginx с WebSocket проксированием
+- Получение SSL сертификата через Let's Encrypt
+- Автоматическая проверка DNS записей
+- Управление клиентами через удобный скрипт
+- Поддержка Cloudflare для маскировки трафика
