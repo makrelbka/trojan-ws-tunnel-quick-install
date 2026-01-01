@@ -13,13 +13,11 @@ NC='\033[0m'
 uninstall_trojan() {
     echo -e "${YELLOW}Удаление trojan-go...${NC}"
     
-    # Остановка и удаление сервиса
     systemctl stop trojan-go 2>/dev/null || true
     systemctl disable trojan-go 2>/dev/null || true
     rm -f /etc/systemd/system/trojan-go.service
     systemctl daemon-reload
     
-    # Удаление файлов
     rm -f /usr/local/bin/trojan-go
     rm -rf /usr/local/etc/trojan-go
     rm -f /usr/local/bin/trojan-client
@@ -68,7 +66,27 @@ if [ -z "$DOMAIN" ]; then
     exit 1
 fi
 
-# Проверка DNS
+EMAIL="admin@${DOMAIN}"
+
+echo -e "${GREEN}Начинаю установку trojan-go для домена: ${DOMAIN}${NC}"
+echo ""
+read -p "Продолжить установку? (y/n): " -n 1 -r
+echo ""
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "${RED}Установка отменена${NC}"
+    exit 1
+fi
+
+# Обновление только списков пакетов
+echo -e "${YELLOW}Обновление списков пакетов...${NC}"
+export DEBIAN_FRONTEND=noninteractive
+apt update
+
+# Установка только нужных зависимостей
+echo -e "${YELLOW}Установка зависимостей...${NC}"
+apt install -y curl wget unzip python3 python3-pip nginx certbot python3-certbot-nginx ufw dnsutils
+
+# Проверка DNS (после установки dnsutils)
 echo -e "${YELLOW}Проверка DNS записей для ${DOMAIN}...${NC}"
 DOMAIN_IP=$(dig +short ${DOMAIN} @8.8.8.8 2>/dev/null | tail -n1 || nslookup ${DOMAIN} 2>/dev/null | grep -A1 "Name:" | grep "Address:" | awk '{print $2}' || echo "")
 
@@ -100,26 +118,6 @@ else
     echo -e "${GREEN}✓ DNS записи настроены правильно!${NC}"
     echo ""
 fi
-
-EMAIL="admin@${DOMAIN}"
-
-echo -e "${GREEN}Начинаю установку trojan-go для домена: ${DOMAIN}${NC}"
-echo ""
-read -p "Продолжить установку? (y/n): " -n 1 -r
-echo ""
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${RED}Установка отменена${NC}"
-    exit 1
-fi
-
-# Обновление только списков пакетов
-echo -e "${YELLOW}Обновление списков пакетов...${NC}"
-export DEBIAN_FRONTEND=noninteractive
-apt update
-
-# Установка только нужных зависимостей
-echo -e "${YELLOW}Установка зависимостей...${NC}"
-apt install -y curl wget unzip python3 python3-pip nginx certbot python3-certbot-nginx ufw dnsutils
 
 # Установка trojan-go
 echo -e "${YELLOW}Установка trojan-go...${NC}"
