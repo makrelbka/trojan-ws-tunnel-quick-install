@@ -1,8 +1,14 @@
 # trojan-ws-tunnel-quick-install
 
-Быстрая установка trojan-go с WebSocket туннелированием через Cloudflare для обхода блокировок мобильных операторов.
+Быстрая установка trojan-go с WebSocket туннелированием через Cloudflare.
 
 ## Установка
+
+<div align="center" style="background-color: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 5px; margin: 20px 0;">
+
+⚠️ **ВАЖНО: Установка должна выполняться от root!**
+
+</div>
 
 ### Интерактивная установка
 
@@ -44,6 +50,12 @@ trojan-client list
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/makrelbka/trojan-ws-tunnel-quick-install/main/install.sh) uninstall
 ```
+
+## Покупка домена (личная рекомендация)
+
+https://timeweb.com/ru/services/domains/
+
+Покупать домае лучше с TLD ".online"
 
 ## Особенности
 
