@@ -1,5 +1,12 @@
 # trojan-ws-tunnel-quick-install
 
+```bash
+      "tls": {
+        "enabled": true,
+        "server_name": "makrelbka.online"
+      },
+```
+
 Быстрая установка trojan-go с WebSocket туннелированием через Cloudflare.
 
 ## Установка
