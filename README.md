@@ -1,12 +1,5 @@
 # trojan-ws-tunnel-quick-install
 
-```bash
-      "tls": {
-        "enabled": true,
-        "server_name": "makrelbka.online"
-      },
-```
-
 Быстрая установка trojan-go с WebSocket туннелированием через Cloudflare.
 
 ## Установка
@@ -72,3 +65,16 @@ https://timeweb.com/ru/services/domains/
 - Автоматическая проверка DNS записей
 - Управление клиентами через удобный скрипт
 - Поддержка Cloudflare для маскировки трафика
+
+
+## P.S.:
+
+```bash
+      "tls": {
+        "enabled": true,
+        "server_name": "makrelbka.online"
+      },
+```
+win client:
+https://github.com/hiddify/hiddify-app/
+https://github.com/hiddify/hiddify-app/releases/
